@@ -3,6 +3,7 @@ package appiumtests.appiumtests;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Handler;
@@ -21,7 +22,7 @@ import io.appium.java_client.MobileElement;
 public class App 
 {
 	
-    static  AppiumDriver driver;
+    static  AppiumDriver<MobileElement> driver;
 
 	
     public static void main( String[] args )
@@ -50,7 +51,7 @@ public class App
         capabilities.setCapability("fullReset", "false");
 //        capabilities.setCapability("automationName", "selendroid");
         URL url = new URL("http://127.0.0.1:4723/wd/hub");
-        driver = new AppiumDriver(url, capabilities);
+        driver = new AppiumDriver<MobileElement>(url, capabilities);
         
 
         System.out.println("Application started..");
@@ -70,41 +71,94 @@ public class App
      * 
      */
     public static void gotoProfile() {
-    	MobileElement profiletab = (MobileElement) driver.findElement(By.id("com.instagram.android:id/profile_tab"));
-    	profiletab.click();
-    	
-    	MobileElement followers = (MobileElement) driver.findElement(By.id("com.instagram.android:id/row_profile_header_followers_container"));
-    	followers.click();
-    	
-    	//follower list 
-    	MobileElement list = (MobileElement) driver.findElement(By.id("android:id/list"));
-    	
-    	List<MobileElement> listItems = list.findElements(By.xpath("//android.widget.ListView/android.widget.LinearLayout/*"));
-    
+        MobileElement profiletab = driver.findElement(By.id("com.instagram.android:id/profile_tab"));
+        profiletab.click();
 
+        MobileElement followers = driver.findElement(By.id("com.instagram.android:id/row_profile_header_followers_container"));
+        followers.click();
 
-    	System.out.println("list size is : "+ listItems.size());
-        for(int i = 1 ; i < listItems.size(); i++) {
-        	MobileElement row = (MobileElement) driver.findElement(By.xpath(
-        			"//android.widget.ListView[@resource-id=\"android:id/list\"]/android.widget.LinearLayout["+i+"]"));
-        	
-        	List<MobileElement> userid =  row.findElements(By.id("com.instagram.android:id/follow_list_username"));
-        	List<MobileElement> name =  row.findElements(By.id("com.instagram.android:id/follow_list_subtitle"));
-        	List<MobileElement> image =  row.findElements(By.id("com.instagram.android:id/follow_list_user_imageview"));
-        	        	
-        	for(int j = 0; j < name.size(); j++) {
-        		print("Instagram username : "+ userid.get(j) .getText()+ " | " + "Name : "+  name.get(j).getText());
-        	}
+        // Scroll and capture all loaded list items
+        List<String> allItems = new ArrayList<>();
+        boolean canScrollMore = true;
+        String lastItem = "";
 
-        	
-    
+        while (canScrollMore) {
+            List<MobileElement> listItems = driver.findElements(By.xpath("//android.widget.ListView/android.widget.LinearLayout"));
+
+            for (MobileElement listItem : listItems) {
+                String name = "", username = "";
+                MobileElement image ;
+                try {
+                    try {
+                        username = listItem.findElement(By.id("com.instagram.android:id/follow_list_username")).getText();
+                    } catch (Exception e) {
+                        // Handle exceptions
+                    }
+
+                    try {
+                        name = listItem.findElement(By.id("com.instagram.android:id/follow_list_subtitle")).getText();
+                    } catch (Exception e) {
         
+                        // Handle exceptions
+                    }
+        
+                    image = listItem.findElement(By.id("com.instagram.android:id/follow_list_user_imageview"));
+                    
+                    
+                    
+                    String userDetails = "Instagram username: " + username + " | Name: " + name + " | Image url : "+ image.getAttribute("src");
+                    
+
+                    if (!allItems.contains(userDetails)) {
+                        allItems.add(userDetails);
+                        print(userDetails);
+                    }
+                } catch (Exception e) {
+                    // Handle exceptions
+                }
+            }
+
+            // Try to scroll
+            String currentLastItem = allItems.get(allItems.size() - 1);
+            canScrollMore = scrollDown();
+
+            if (lastItem.equals(currentLastItem)) {
+                print("End of list reached.");
+                canScrollMore = false; 
+            } else {
+                lastItem = currentLastItem;
+            }
         }
-    	
-        
-        
-    	
+
+        System.out.println("Total loaded items: " + allItems.size());
     }
+
+    public static boolean scrollDown() {
+        int startX = driver.manage().window().getSize().width / 2;
+        int startY = (int) (driver.manage().window().getSize().height * 0.8);
+        int endY = (int) (driver.manage().window().getSize().height * 0.2);
+
+        // Perform the swipe action
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+        Sequence swipe = new Sequence(finger, 1);
+        swipe.addAction(finger.createPointerMove(Duration.ofMillis(0), PointerInput.Origin.viewport(), startX, startY));
+        swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        swipe.addAction(finger.createPointerMove(Duration.ofMillis(600), PointerInput.Origin.viewport(), startX, endY));
+        swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+        driver.perform(List.of(swipe));
+
+        // Check if new items are loaded after scrolling
+        List<MobileElement> newListItems = driver.findElements(By.xpath("//android.widget.ListView/android.widget.LinearLayout"));
+        return !newListItems.isEmpty(); // Continue scrolling if more items are loaded
+    }
+
+
+    	
+        
+        
+    	
+    
     
     public static void print(String s){
     	System.out.println(s);
