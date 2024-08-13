@@ -24,18 +24,60 @@
     
     
     <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
-<dependency>
+        <dependency>
     <groupId>org.seleniumhq.selenium</groupId>
     <artifactId>selenium-java</artifactId>
     <version>3.141.59</version>
 </dependency>
 
 <!-- https://mvnrepository.com/artifact/io.appium/java-client -->
-<dependency>
+        <dependency>
     <groupId>io.appium</groupId>
     <artifactId>java-client</artifactId>
     <version>7.5.0</version>
 </dependency>
+      <dependency>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+          <version>2.11.0</version> <!-- Check for the latest version -->
+      </dependency>
+      <dependency>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+          <version>2.11.0</version> <!-- Check for the latest version -->
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+
+      <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+      <dependency>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
+          <version>2.11.0</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.konghq/unirest-objectmapper-jackson -->
+      <dependency>
+          <groupId>com.konghq</groupId>
+          <artifactId>unirest-objectmapper-jackson</artifactId>
+          <version>4.2.9</version>
+      </dependency>
+      <dependency>
+          <groupId>appiumtests</groupId>
+          <artifactId>appiumtests</artifactId>
+          <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+
 
   </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

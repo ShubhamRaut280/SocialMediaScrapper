@@ -1,23 +1,27 @@
 package appiumtests.appiumtests;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Handler;
 
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.MobileElement;
+import static appiumtests.appiumtests.UserModel.saveUserModelListAsJson;
 
 public class App 
 {
@@ -78,9 +82,9 @@ public class App
         followers.click();
 
         // Scroll and capture all loaded list items
-        List<String> allItems = new ArrayList<>();
+        List<UserModel> allItems = new ArrayList<>();
         boolean canScrollMore = true;
-        String lastItem = "";
+        UserModel lastItem = new UserModel();
 
         while (canScrollMore) {
             List<MobileElement> listItems = driver.findElements(By.xpath("//android.widget.ListView/android.widget.LinearLayout"));
@@ -103,14 +107,15 @@ public class App
                     }
         
                     image = listItem.findElement(By.id("com.instagram.android:id/follow_list_user_imageview"));
+                    String imagestring = captureElementScreenshotAsBase64(image);
                     
                     
                     
-                    String userDetails = "Instagram username: " + username + " | Name: " + name + " | Image url : "+ image.getAttribute("src");
-                    
+                    String userDetails = "Instagram username: " + username + " | Name: " + name + " | Image url : "+ imagestring;
+                    UserModel user = new UserModel(username, name, getUrl(imagestring));
 
-                    if (!allItems.contains(userDetails)) {
-                        allItems.add(userDetails);
+                    if (!allItems.contains(user)) {
+                        allItems.add(user);
                         print(userDetails);
                     }
                 } catch (Exception e) {
@@ -119,7 +124,7 @@ public class App
             }
 
             // Try to scroll
-            String currentLastItem = allItems.get(allItems.size() - 1);
+            UserModel currentLastItem = allItems.get(allItems.size() - 1);
             canScrollMore = scrollDown();
 
             if (lastItem.equals(currentLastItem)) {
@@ -131,6 +136,33 @@ public class App
         }
 
         System.out.println("Total loaded items: " + allItems.size());
+
+        saveUserModelListAsJson(allItems, "UserDetails.json");
+    }
+
+    private static String getUrl(String imagestring) {
+        return "data:image/jpeg;base64,"+imagestring;
+    }
+
+    public static  String captureElementScreenshotAsBase64(MobileElement element) {
+        // Capture the screenshot of the element
+        File screenshot = element.getScreenshotAs(OutputType.FILE);
+
+        try {
+            // Convert the screenshot file to a byte array
+            byte[] fileContent = FileUtils.readFileToByteArray(screenshot);
+
+            // Encode the byte array to a Base64 string
+            String base64Image = Base64.getEncoder().encodeToString(fileContent);
+
+            // Optionally delete the file after conversion
+            screenshot.delete();
+
+            return base64Image;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static boolean scrollDown() {
